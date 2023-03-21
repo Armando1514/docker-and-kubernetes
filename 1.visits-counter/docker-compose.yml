@@ -1,0 +1,9 @@
+version: '3'
+services: 
+  redis-server:
+    image: 'redis'
+  node-app:
+    restart: 'unless-stopped'
+    build: . # it means: look in this directory for a dockerfile
+    ports:
+      - "4001:8081"
