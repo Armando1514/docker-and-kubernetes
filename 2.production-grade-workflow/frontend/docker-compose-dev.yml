@@ -1,0 +1,21 @@
+version: '3'
+services:
+  web:
+    build: 
+      context: .
+      dockerfile: Dockerfile.dev
+
+    ports: 
+      - "3000:3000"
+    volumes:
+      - /app/node_modules # It says do not try to map node_modules inside the container with the local volume on my machine
+      - .:/app # It says we wanna map the folder outside the container (.) with the app folder inside the container
+  tests:
+    stdin_open: true
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    volumes:
+      - /app/node_modules
+      - .:/app
+    command: ["npm", "run", "test"]

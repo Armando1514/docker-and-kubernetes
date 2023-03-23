@@ -15,7 +15,7 @@ function App() {
           target="_blank"
           rel="noopener noreferrer"
         >
-          Learn React, CHANGED - PULL REQUEST
+          Learn React, CHANGED - PULL REQUEST NEW FEATURE
         </a>
       </header>
     </div>
