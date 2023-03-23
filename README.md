@@ -6,3 +6,7 @@
 1.visits-counter:
 
 - docker-compose up
+
+2.production-grade-workflow
+
+![production-grade-workflow](./img/3.png)
