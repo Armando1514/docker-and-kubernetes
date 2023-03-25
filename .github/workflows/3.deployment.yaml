@@ -22,3 +22,19 @@ jobs:
       - run: docker push nextwas/multi-nginx-10-14
       - run: docker push nextwas/multi-server-10-14
       - run: docker push nextwas/multi-worker-10-14
+
+      - name: Generate deployment package
+        run: cd ./3.fibonacci-sequence && 
+             zip -r deploy.zip . -x '*.git*'
+     
+      - name: Deploy to EB
+        uses: einaregilsson/beanstalk-deploy@v18
+        with:
+            aws_access_key: ${{ secrets.AWS_ACCESS_KEY }}
+            aws_secret_key: ${{ secrets.AWS_SECRET_KEY }}
+            application_name: multi-deployment
+            environment_name: Multideployment-env
+            existing_bucket_name: elasticbeanstalk-us-east-1-528304107701
+            region: us-east-1
+            version_label: ${{ github.sha }}
+            deployment_package: ./3.fibonacci-sequence/deploy.zip
