@@ -1,0 +1,24 @@
+name: Deploy MultiDocker
+on:
+  push:
+    branches:
+      - main # check your repo, your default branch might be master!
+ 
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - run: docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
+      - run: docker build -t nextwas/react-test -f 3.fibonacci-sequence/client/Dockerfile.dev 3.fibonacci-sequence/client
+      - run: docker run -e CI=true nextwas/react-test npm test
+ 
+      - run: docker build -t nextwas/multi-client-10-14 3.fibonacci-sequence/client
+      - run: docker build -t nextwas/multi-nginx-10-14 3.fibonacci-sequence/nginx
+      - run: docker build -t nextwas/multi-server-10-14 3.fibonacci-sequence/server
+      - run: docker build -t nextwas/multi-worker-10-14 3.fibonacci-sequence/worker
+ 
+      - run: docker push nextwas/multi-client-10-14
+      - run: docker push nextwas/multi-nginx-10-14
+      - run: docker push nextwas/multi-server-10-14
+      - run: docker push nextwas/multi-worker-10-14
