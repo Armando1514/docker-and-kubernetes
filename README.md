@@ -23,4 +23,6 @@ To run you need to add the secrets in an imperative way (commands typing from te
 
 ```kubectl create secret generic pgpassword --from-literal POSTGRES_PASSWORD=password ```
 
+Install ingress-nginx on your kubernetes cluster: https://kubernetes.github.io/ingress-nginx/deploy/#quick-start
+
 ![fibonacci deployment to prod](./img/deployment-to-prod-fibonacci.png)
