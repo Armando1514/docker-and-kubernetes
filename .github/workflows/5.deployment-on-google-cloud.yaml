@@ -1,0 +1,69 @@
+name: Deploy MultiK8s on Google Cloud
+on:
+  push:
+    branches:
+      - main
+
+env:
+  SHA: $(git rev-parse HEAD)
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+  
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+    
+    steps:
+        - uses: actions/checkout@v3
+
+        - name: Test
+          run : |-
+              docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
+              docker build -t nextwas/react-test -f 5.fibonacci-sequence-on-k8S-hosted-on-google-cloud/client/Dockerfile.dev 5.fibonacci-sequence-on-k8S-hosted-on-google-cloud/client
+              docker run -e CI=true nextwas/react-test npm test
+          
+        - name: Set Identity Provider
+          uses: 'google-github-actions/auth@v0'
+          with:
+            workload_identity_provider: 'projects/585273550925/locations/global/workloadIdentityPools/my-pool/providers/my-provider'
+            service_account: 'github-actions-deployment@thematic-metric-382208.iam.gserviceaccount.com'
+
+        - name: Set Project
+          uses: google-github-actions/setup-gcloud@v0
+          with:
+            project_id: thematic-metric-382208
+          
+        - name: Auth
+          run: |-
+            gcloud --quiet auth configure-docker
+          
+        - name: Get Credentials
+          uses: google-github-actions/get-gke-credentials@v0
+          with:
+            cluster_name: cluster-1
+            location: europe-central2-a
+        
+        - name: Build
+          run: |-
+            docker build -t nextwas/multi-client-10-14:latest -t nextwas/multi-client-10-14:${{ env.SHA }} 5.fibonacci-sequence-on-k8S-hosted-on-google-cloud/client
+            docker build -t nextwas/multi-server-10-14:latest -t nextwas/multi-server-10-14:${{ env.SHA }} 5.fibonacci-sequence-on-k8S-hosted-on-google-cloud/server
+            docker build -t nextwas/multi-worker-10-14:latest -t nextwas/multi-worker-10-14:${{ env.SHA }} 5.fibonacci-sequence-on-k8S-hosted-on-google-cloud/worker
+
+        - name: Push
+          run: |-
+            docker push nextwas/multi-client-10-14:latest
+            docker push nextwas/multi-server-10-14:latest
+            docker push nextwas/multi-worker-10-14:latest
+
+            docker push nextwas/multi-client-10-14:${{ env.SHA }}
+            docker push nextwas/multi-server-10-14:${{ env.SHA }}
+            docker push nextwas/multi-worker-10-14:${{ env.SHA }}
+      
+        - name: Apply
+          run: |- 
+            kubectl apply -f 5.fibonacci-sequence-on-k8S-hosted-on-google-cloud/k8s
+            kubectl set image deployments/client-deployment client=nextwas/multi-client-10-14:${{ env.SHA }}
+            kubectl set image deployments/server-deployment server=nextwas/multi-server-10-14:${{ env.SHA }}
+            kubectl set image deployments/worker-deployment worker=nextwas/multi-worker-10-14:${{ env.SHA }}
